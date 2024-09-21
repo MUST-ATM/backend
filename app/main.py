@@ -1,3 +1,9 @@
+# filename: main.py
+# description: This file handles the backend API for the ATM project, including  upload, user creation, and balance updates.
+# author: Cieres
+# date: 2024-09-21
+# version: 0.1
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from .routers import upload
@@ -5,18 +11,21 @@ app = FastAPI()
 
 app.include_router(upload.router)
 
+# The text and buttons below are for testing purposes and will be modified later.
 @app.get("/")
 def main():
     content = """
 <body>
-<form action="/files/" enctype="multipart/form-data" method="post">
+<form action="/upload/" enctype="multipart/form-data" method="post">
 <input name="files" type="file" multiple>
 <input type="submit">
 </form>
-<form action="/uploadfiles/" enctype="multipart/form-data" method="post">
+<form action="/upload/" enctype="multipart/form-data" method="post">
 <input name="files" type="file" multiple>
 <input type="submit">
 </form>
 </body>
     """
     return HTMLResponse(content=content)
+
+
