@@ -1,3 +1,9 @@
+# filename: main.py
+# description: This file handles the backend API for the ATM project, including  upload, user creation, and balance updates.
+# author: Cieres
+# date: 2024-09-21
+# version: 0.1
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from .routers import upload,balance,account
@@ -18,6 +24,7 @@ app.include_router(upload.router)
 app.include_router(balance.router)
 app.include_router(account.router) 
 
+# The text and buttons below are for testing purposes and will be modified later.
 @app.get("/")
 def main():
     content = """
@@ -33,3 +40,5 @@ def main():
 </body>
     """
     return HTMLResponse(content=content)
+
+
