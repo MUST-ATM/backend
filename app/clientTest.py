@@ -1,6 +1,7 @@
 
 import requests
 import time
+import uuid
 
 with open("C:\misc\image2.png", "rb") as f:
     data = f.read()
