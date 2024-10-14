@@ -8,15 +8,12 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from .routers import upload,balance,account
 from contextlib import asynccontextmanager
-from .dataBase import init, close
+from .dataBase import create_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 应用启动时执行
-    await init()  # 初始化数据库
+    await create_tables()  # 初始化数据库
     yield
-    # 应用关闭时执行
-    await close()  # 关闭数据库连接
 
 app = FastAPI(lifespan=lifespan)
 

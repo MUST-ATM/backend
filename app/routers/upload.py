@@ -37,5 +37,4 @@ async def upload(request: Request):
         # After the file is written, call the face recognition function on the saved file.
         return faceRecognitionByPath(filename)
     except Exception:
-
         return {"message": "There was an error uploading the file"}

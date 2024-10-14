@@ -1,6 +1,6 @@
 # balance.py
 from fastapi import APIRouter, Request
-from app.models import User, Balance
+from app.dataBase import get_connection
 
 router = APIRouter()
 
@@ -11,10 +11,16 @@ async def deposit(request: Request):
     user_id = data.get("user_id")
     amount = data.get("amount")
 
-    user = await User.filter(user_id=user_id).first()
-    balance = await Balance.filter(user=user).first()
-    balance.hkd_account += amount
-    await balance.save()
+    db = await get_connection()
+    async with db.execute("SELECT hkd_account FROM balance WHERE user_id = ?", (user_id,)) as cursor:
+        balance = await cursor.fetchone()
+        if not balance:
+            return {"message": "Balance not found"}
+
+        new_balance = balance[0] + amount
+        await db.execute("UPDATE balance SET hkd_account = ? WHERE user_id = ?", (new_balance, user_id))
+    await db.commit()
+    await db.close()
 
     return True
 
@@ -25,13 +31,20 @@ async def withdrawal(request: Request):
     user_id = data.get("user_id")
     amount = data.get("amount")
 
-    user = await User.filter(user_id=user_id).first()
-    balance = await Balance.filter(user=user).first()
+    db = await get_connection()
+
+    async with db.execute("SELECT hkd_account FROM balance WHERE user_id = ?", (user_id,)) as cursor:
+        balance = await cursor.fetchone()
+
+        if not balance:
+            return {"message": "Balance not found"}
+
+        if balance[0] < amount:
+            return {"message": "Insufficient balance"}
+
+        new_balance = balance[0] - amount
+        await db.execute("UPDATE balance SET hkd_account = ? WHERE user_id = ?", (new_balance, user_id))
+
+    await db.commit()
     
-    if balance.hkd_account < amount:
-        return False
-
-    balance.hkd_account -= amount
-    await balance.save()
-
     return True
