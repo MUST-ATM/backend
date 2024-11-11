@@ -21,6 +21,22 @@ async def get_user_info(user_id: str):
                 raise HTTPException(status_code=404, detail="User not found")
             return {"userID": user[0], "name": user[1]}
 
+@router.get("/account/face/{face_id}", tags=["account"])
+async def get_user_info(face_id: str):
+    """
+    Get the user information for the specified face ID.
+    Args:
+        face_id (str): The face ID of the account to retrieve.
+    Returns:
+        A dictionary containing the user ID of the account holder.
+    """
+    async with aiosqlite.connect(DATABASE) as db:
+        async with db.execute("SELECT user_id FROM face WHERE name = ?", (face_id,)) as cursor:
+            user = await cursor.fetchone()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            return {"userID": user[0]}
+
 @router.get("/account/card/{user_id}/{currency}", tags=["account"])
 async def get_balance_by_currency(user_id: str, currency: str):
     """
