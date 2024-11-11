@@ -5,22 +5,6 @@ from app.dataBase import DATABASE
 from app.face_module.FacePerception.FaceRecognition import newFace
 router = APIRouter()
 
-@router.get("/account/user/{user_id}", tags=["account"])
-async def get_user_info(user_id: str):
-    """
-    Get the user information for the specified user ID.
-    Args:
-        user_id (str): The user ID of the account to retrieve.
-    Returns:
-        A dictionary containing the user ID and name of the account holder.
-    """
-    async with aiosqlite.connect(DATABASE) as db:
-        async with db.execute("SELECT user_id, name FROM user WHERE user_id = ?", (user_id,)) as cursor:
-            user = await cursor.fetchone()
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
-            return {"userID": user[0], "name": user[1]}
-
 @router.get("/account/face/{face_id}", tags=["account"])
 async def get_user_info(face_id: str):
     """
