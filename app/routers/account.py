@@ -8,11 +8,11 @@ router = APIRouter()
 @router.get("/account/face/{faceId}", tags=["account"])
 async def get_user_info(faceId: str):
     """
-    Get the user information for the specified user ID.
+    Get the user information for the specified face ID.
     Args:
         user_id (int): The user ID of the account to retrieve.
     Returns:
-        A dictionary containing the user ID and name of the account holder.
+        A dictionary containing the user ID of the account holder.
     """
     async with aiosqlite.connect(DATABASE) as db:
         async with db.execute("SELECT user_id, name FROM user WHERE user_id = ?", (faceId,)) as cursor:
@@ -20,7 +20,7 @@ async def get_user_info(faceId: str):
             print(user)
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
-            return {"userID": user[0], "name": user[1]}
+            return {"userID": user[0]}
 
 @router.get("/account/card/{user_id}/{currency}", tags=["account"])
 async def get_balance_by_currency(user_id: int, currency: str):
