@@ -6,13 +6,15 @@
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from .routers import upload,balance,account
+from app.routers import upload,balance,account
 from contextlib import asynccontextmanager
-from .dataBase import create_tables
-
+from app.dataBase import create_tables, insert_initial_data
+from app.dataBase import get_connection
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()  # 初始化数据库
+    await insert_initial_data()
+    print("Init done")
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -21,21 +23,12 @@ app.include_router(upload.router)
 app.include_router(balance.router)
 app.include_router(account.router) 
 
-# The text and buttons below are for testing purposes and will be modified later.
+# Simplified main page to display 'Hello'
 @app.get("/")
-def main():
+async def main():
     content = """
 <body>
-<form action="/upload/" enctype="multipart/form-data" method="post">
-<input name="files" type="file" multiple>
-<input type="submit">
-</form>
-<form action="/upload/" enctype="multipart/form-data" method="post">
-<input name="files" type="file" multiple>
-<input type="submit">
-</form>
+<h1>Hello</h1>
 </body>
     """
     return HTMLResponse(content=content)
-
-

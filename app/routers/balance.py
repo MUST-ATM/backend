@@ -1,50 +1,56 @@
 # balance.py
 from fastapi import APIRouter, Request,HTTPException
 from app.dataBase import get_connection
+import aiosqlite
 
 router = APIRouter()
+DATABASE = "database.db"
 
-# Deposit API
-@router.post("/balance/deposit", tags=["balance"])
-async def deposit(request: Request):
+# Balance Change API
+@router.post("/account/balance/change", tags=["balance"])
+async def change_balance(request: Request):
     data = await request.json()
-    user_id = data.get("user_id")
-    amount = data.get("amount")
+    user_id = int(data.get("user_id"))
+    amount = float(data.get("amount"))
+    currency = data.get("currency")
 
-    db = await get_connection()
-    async with db.execute("SELECT hkd_account FROM balance WHERE user_id = ?", (user_id,)) as cursor:
-        balance = await cursor.fetchone()
-        if not balance:
-            raise HTTPException(status_code=405, detail="Balance not found")
 
-        new_balance = balance[0] + amount
-        await db.execute("UPDATE balance SET hkd_account = ? WHERE user_id = ?", (new_balance, user_id))
-    await db.commit()
-    await db.close()
+    async with aiosqlite.connect(DATABASE) as db:
+        db.row_factory = aiosqlite.Row
+        if currency == "CNY":
+            async with db.execute("SELECT * FROM user") as cursor:
+                print("Reading...")
+                async for row in cursor:
+                    if int(row['user_id']) == user_id:
+                        print("Writting...")
+                        await db.execute("UPDATE balance SET foreign_account = ? WHERE user_id = ? ", (amount, user_id))
+                        await db.commit()
+                        assert db.total_changes > 0
 
-    return True
+                        return HTTPException(status_code=200, detail="Success")
+                
+        elif currency == "MOP":
+             async with db.execute("SELECT * FROM user") as cursor:
+                print("Reading...")
+                async for row in cursor:
+                    if int(row['user_id']) == user_id:
+                        print("Writting...")
+                        await db.execute("UPDATE balance SET mop_account = ? WHERE user_id = ? ", (amount, user_id))
+                        await db.commit()
+                        assert db.total_changes > 0
 
-# Withdrawal API
-@router.post("/balance/withdrawal", tags=["balance"])
-async def withdrawal(request: Request):
-    data = await request.json()
-    user_id = data.get("user_id")
-    amount = data.get("amount")
+                        return HTTPException(status_code=200, detail="Success")
+                    
+        elif currency == "HKD":
+            async with db.execute("SELECT * FROM user") as cursor:
+                print("Reading...")
+                async for row in cursor:
+                    if int(row['user_id']) == user_id:
+                        print("Writting...")
+                        await db.execute("UPDATE balance SET hkd_account = ? WHERE user_id = ? ", (amount, user_id))
+                        await db.commit()
+                        assert db.total_changes > 0
 
-    db = await get_connection()
+                        return HTTPException(status_code=200, detail="Success")
 
-    async with db.execute("SELECT hkd_account FROM balance WHERE user_id = ?", (user_id,)) as cursor:
-        balance = await cursor.fetchone()
-
-        if not balance:
-            raise HTTPException(status_code=405, detail="Balance not found")
-
-        if balance[0] < amount:
-            raise HTTPException(status_code=407, detail="Insufficient balance")
-
-        new_balance = balance[0] - amount
-        await db.execute("UPDATE balance SET hkd_account = ? WHERE user_id = ?", (new_balance, user_id))
-
-    await db.commit()
-    
-    return True
+    return HTTPException(status_code=200, detail="Success")

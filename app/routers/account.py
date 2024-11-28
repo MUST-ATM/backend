@@ -5,24 +5,25 @@ from app.dataBase import DATABASE
 from app.face_module.FacePerception.FaceRecognition import newFace
 router = APIRouter()
 
-@router.get("/account/user/{user_id}", tags=["account"])
-async def get_user_info(user_id: str):
+@router.get("/account/face/{faceId}", tags=["account"])
+async def get_user_info(faceId: str):
     """
     Get the user information for the specified user ID.
     Args:
-        user_id (str): The user ID of the account to retrieve.
+        user_id (int): The user ID of the account to retrieve.
     Returns:
         A dictionary containing the user ID and name of the account holder.
     """
     async with aiosqlite.connect(DATABASE) as db:
-        async with db.execute("SELECT user_id, name FROM user WHERE user_id = ?", (user_id,)) as cursor:
+        async with db.execute("SELECT user_id, name FROM user WHERE user_id = ?", (faceId,)) as cursor:
             user = await cursor.fetchone()
+            print(user)
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             return {"userID": user[0], "name": user[1]}
 
 @router.get("/account/card/{user_id}/{currency}", tags=["account"])
-async def get_balance_by_currency(user_id: str, currency: str):
+async def get_balance_by_currency(user_id: int, currency: str):
     """
     Get the balance of the specified currency for the specified user ID.
     Args:
@@ -37,11 +38,12 @@ async def get_balance_by_currency(user_id: str, currency: str):
             if not balance:
                 raise HTTPException(status_code=405, detail="Balance not found")
 
-            if currency == "foreign":
+            if currency == "CNY":
+                print(type(balance[0]))
                 balance_value = balance[0]
-            elif currency == "hkd":
+            elif currency == "HKD":
                 balance_value = balance[1]
-            elif currency == "mop":
+            elif currency == "MOP":
                 balance_value = balance[2]
             else:
                 raise HTTPException(status_code=406, detail="Invalid currency type")
@@ -49,7 +51,7 @@ async def get_balance_by_currency(user_id: str, currency: str):
     return {"balance": balance_value}
 
 @router.post("/account/create", tags=["account"])
-async def create_user(user_id: str, name: str,imagePath:str):
+async def create_user(user_id: int, name: str,imagePath:str):
     """
     Create a new user account with the specified user ID and name.
     Args:
@@ -69,7 +71,7 @@ async def create_user(user_id: str, name: str,imagePath:str):
         raise HTTPException(status_code=409, detail="Error Account Creation")
 
 @router.post("/account/delete", tags=["account"])
-async def delete_user(user_id: str):
+async def delete_user(user_id: int):
     """
     Delete the user account with the specified user ID.
     Args:
@@ -81,4 +83,4 @@ async def delete_user(user_id: str):
         await db.execute("DELETE FROM user WHERE user_id = ?", (user_id,))
         await db.execute("DELETE FROM balance WHERE user_id = ?", (user_id,))
         await db.commit()
-    return True
+    return True 

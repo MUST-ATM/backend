@@ -8,12 +8,15 @@ After initial testing, this file currently meets the requirements.
 It may be further modified when integrating with the database in the future.
 """
 
-from fastapi import APIRouter, Request,HTTPException
+from fastapi import APIRouter, Request, HTTPException
+from fastapi.responses import JSONResponse
 import aiofiles
-
+import aiosqlite
 from app.face_module.FacePerception.FaceRecognition import faceRecognitionByPath
-from app.face_module.FaceAntiSpoofing import faceAntiSpoofingByPath
 from app.dataBase import get_connection
+import asyncio
+
+DATABASE = "database.db"
 
 router = APIRouter()
 
@@ -30,54 +33,44 @@ async def upload(request: Request):
     Returns:
         A dictionary containing either the face recognition result (name) or an error message.
     """
+    # Extract the filename from the request headers.(none extra protect)
+    async with aiofiles.open("capture.jpg", 'wb') as f:
+        async for chunk in request.stream():
+            await f.write(chunk)
+    # After the file is written, call the face recognition function on the saved file.
     try:
-        # Extract the filename from the request headers.(none extra protect)
-        filename = request.headers['filename']
-        async with aiofiles.open(filename, 'wb') as f:
-            async for chunk in request.stream():
-                await f.write(chunk)
+        print("faceRecoing")
+        username =  faceRecognitionByPath('capture2.jpg')
+        #username = "Bob"
+    except:
+        raise JSONResponse(status_code=410, content={"detail": "Error FaceRecognition"})
+    
+    async with aiosqlite.connect(DATABASE) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT * FROM user") as cursor:
+            async for row in cursor:
+                if row['name'] == username:
+                    return {"username": row['user_id']}
+        raise JSONResponse(status_code=404, content={"detail": "User not found"})
 
-        # After the file is written, call the face recognition function on the saved file.
-        try:
-            user_id =  faceRecognitionByPath(filename)
-        except:
-            raise HTTPException(status_code=410, detail="Error FaceRecognition")
-        try:
-            db = await get_connection()
-        except:
-            raise HTTPException(status_code=412, detail="Database connection error")
-        async with db.execute("SELECT name FROM user WHERE user_id = ?", (user_id)) as cursor:
-            user = await cursor.fetchone()
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
-            return {"username" : user[0]}
-    except Exception:
-        raise HTTPException(status_code=408, detail="Error uploading")
 
 @router.post("/upload/face-anti", tags=["upload"])
 async def upload(request: Request):
-    """
-    Handles file upload via chunked streaming transmission.
-    The uploaded file is written to disk asynchronously, then passed to the face recognition function.
+    from app.face_module.FaceAntiSpoofing.FaceAntiSpoofing import faceAntiSpoofingByPath
+    # Extract the filename from the request headers.(none extra protect)
+    async def run_sync(func, *args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, func, *args, **kwargs)
 
-
-    Args:
-        request (Request): The incoming request containing the file data.
-
-    Returns:
-        A dictionary containing either the face recognition result (name) or an error message.
-    """
-    try:
-        # Extract the filename from the request headers.(none extra protect)
-        filename = request.headers['filename']
-        async with aiofiles.open(filename, 'wb') as f:
-            async for chunk in request.stream():
-                await f.write(chunk)
-
-        # After the file is written, call the face recognition function on the saved file.
-        try:
-            return faceAntiSpoofingByPath(filename)
-        except:
-            raise HTTPException(status_code=411, detail="Error FaceAntiSpoofing")
-    except Exception:
-        raise HTTPException(status_code=408, detail="Error uploading")
+    # 使用异步包装器调用faceAntiSpoofingByPath函数
+    result = await run_sync(faceAntiSpoofingByPath, "capture2.jpg")
+    if result:
+       return HTTPException(status_code=200, detail="Success")
+    else:
+        return JSONResponse(status_code=411, content={"detail": "ErrorFaceAntiSpoofing"})
+"""    if  faceAntiSpoofingByPath("capture2.jpg"):
+        raise HTTPException(status_code=200, detail="Success")
+    else:
+        raise HTTPException(status_code=411, detail="Error FaceAntiSpoofing")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+        """
