@@ -34,16 +34,15 @@ async def upload(request: Request):
         A dictionary containing either the face recognition result (name) or an error message.
     """
     # Extract the filename from the request headers.(none extra protect)
-    async with aiofiles.open("capture.jpg", 'wb') as f:
+    async with aiofiles.open("app/images/capture.jpg", 'wb') as f:
         async for chunk in request.stream():
             await f.write(chunk)
     # After the file is written, call the face recognition function on the saved file.
     try:
         print("faceRecoing")
-        username =  faceRecognitionByPath('capture2.jpg')
-        #username = "Bob"
+        username =  faceRecognitionByPath('app/images/capture.jpg')
     except:
-        raise JSONResponse(status_code=410, content={"detail": "Error FaceRecognition"})
+        return JSONResponse(status_code=410, content={"detail": "Error FaceRecognition"})
     
     async with aiosqlite.connect(DATABASE) as db:
         db.row_factory = aiosqlite.Row
@@ -51,7 +50,7 @@ async def upload(request: Request):
             async for row in cursor:
                 if row['name'] == username:
                     return {"username": row['user_id']}
-        raise JSONResponse(status_code=404, content={"detail": "User not found"})
+        return JSONResponse(status_code=404, content={"detail": "User not found"})
 
 
 @router.post("/upload/face-anti", tags=["upload"])

@@ -6,12 +6,31 @@ This is a final project of the course "Software Engineering" in the Faculty of I
 ## Installation
 Please install the fastapi and uvicorn first
 ```bash
+mamba create -n api python=3.10
+mamba activate api 
 pip install fastapi
 pip install uvicorn
 ```
+Other requirements
+````bash
+pip install aiofiles
+pip install aiosqlite
+````
+
+## Environment
+Ensure the python running path is the parent floder of app
+If you are using windows
+```bash
+set PYTHONPATH=.
+```
+Linux or MacOS
+```bash
+export PYTHONPATH=.
+```
+## RUN
 Run the server
 ```bash
-uvicorn main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 ## Face Recognition Module

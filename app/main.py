@@ -9,7 +9,6 @@ from fastapi.responses import HTMLResponse
 from app.routers import upload,balance,account
 from contextlib import asynccontextmanager
 from app.dataBase import create_tables, insert_initial_data
-from app.dataBase import get_connection
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()  # 初始化数据库
