@@ -4,7 +4,7 @@ from app.dataBase import get_connection
 import aiosqlite
 
 router = APIRouter()
-DATABASE = "database.db"
+DATABASE = "app/database.db"
 
 # Balance Change API
 @router.post("/account/balance/change", tags=["balance"])

@@ -16,7 +16,7 @@ from app.face_module.FacePerception.FaceRecognition import faceRecognitionByPath
 from app.dataBase import get_connection
 import asyncio
 
-DATABASE = "database.db"
+DATABASE = "app/database.db"
 
 router = APIRouter()
 
@@ -34,13 +34,13 @@ async def upload(request: Request):
         A dictionary containing either the face recognition result (name) or an error message.
     """
     # Extract the filename from the request headers.(none extra protect)
-    async with aiofiles.open("app/images/capture.jpg", 'wb') as f:
+    async with aiofiles.open("app/received/capture.jpg", 'wb') as f:
         async for chunk in request.stream():
             await f.write(chunk)
     # After the file is written, call the face recognition function on the saved file.
     try:
         print("faceRecoing")
-        username =  faceRecognitionByPath('app/images/capture.jpg')
+        username =  faceRecognitionByPath('app/received/capture.jpg')
     except:
         return JSONResponse(status_code=410, content={"detail": "Error FaceRecognition"})
     
@@ -48,9 +48,11 @@ async def upload(request: Request):
         db.row_factory = aiosqlite.Row
         async with db.execute("SELECT * FROM user") as cursor:
             async for row in cursor:
+                print(row['name'])
                 if row['name'] == username:
                     return {"username": row['user_id']}
-        return JSONResponse(status_code=404, content={"detail": "User not found"})
+                else:
+                    return JSONResponse(status_code=404, content={"detail": "User not found"})
 
 
 @router.post("/upload/face-anti", tags=["upload"])
@@ -62,7 +64,7 @@ async def upload(request: Request):
         return await loop.run_in_executor(None, func, *args, **kwargs)
 
     # 使用异步包装器调用faceAntiSpoofingByPath函数
-    result = await run_sync(faceAntiSpoofingByPath, "capture2.jpg")
+    result = await run_sync(faceAntiSpoofingByPath, "app/received/capture.jpg")
     if result:
        return HTTPException(status_code=200, detail="Success")
     else:
