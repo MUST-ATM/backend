@@ -44,7 +44,12 @@ Then you need clone our face recognition module in app folder
 cd app
 git clone https://github.com/MUST-ATM/face_module.git
 ```
-
+### Add your face
+Put the face image in somewhere and change the code below in ```FaceRecognition.py```: 
+```python
+newFace(cv2.imread('path.jpg'), 'Name_')
+```
+The "_" is placeholder,please do not delete it.
 ## Database
 TBD
 
