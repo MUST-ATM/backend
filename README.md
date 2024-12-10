@@ -51,13 +51,7 @@ newFace(cv2.imread('path.jpg'), 'Name_')
 ```
 The "_" is placeholder,please do not delete it.
 ## Database
-TBD
+For convenience, we use sqlite to implement persistent storage. Simple but not for production.
 
 ## API
-TBD
-
-## RouteMap
-TBD
-
-## Contributors
-TBD
+ http://127.0.0.1:8000/docs
