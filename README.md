@@ -2,7 +2,8 @@
 The backend part of MUST ATM system based on Python.
 
 ## What's MUST ATM
-This is a final project of the course "Software Engineering" in the Faculty of Innovation Engineering, Macau University of Science and Technology. The project is a smart ATM system that can recognize the user's face and provide a personalized service. The backend of system is based on the FastAPI framework and the face_recognition library.
+This is the SE251/SE460 Project. The project is about building an ATM system for M.U.S.T. 
+The project is a smart ATM system that can recognize the user's face and provide a personalized service. The backend of system is based on the FastAPI framework and the face_recognition library.
 ## Installation
 Please install the fastapi and uvicorn first
 ```bash
